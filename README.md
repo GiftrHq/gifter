@@ -23,31 +23,28 @@ gifter/
 ### Prerequisites
 
 - Node.js 18+
-- pnpm 9+ (recommended package manager)
+- npm (comes with Node.js)
 
 ### Installation
 
 ```bash
-# Install pnpm if you haven't already
-npm install -g pnpm
-
 # Install all dependencies
-pnpm install
+npm install
 
 # Run all apps in development mode
-pnpm dev
+npm run dev
 
 # Run specific app
-pnpm dev --filter=@giftr/web
+cd apps/web && npm run dev
 ```
 
 ## Available Scripts
 
-- `pnpm dev` - Start all apps in development mode
-- `pnpm build` - Build all apps and packages
-- `pnpm lint` - Lint all apps and packages
-- `pnpm format` - Format code with Prettier
-- `pnpm clean` - Clean all build artifacts and node_modules
+- `npm run dev` - Start all apps in development mode
+- `npm run build` - Build all apps and packages
+- `npm run lint` - Lint all apps and packages
+- `npm run format` - Format code with Prettier
+- `npm run clean` - Clean all build artifacts and node_modules
 
 ## Apps
 
