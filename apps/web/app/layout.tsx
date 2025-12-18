@@ -17,6 +17,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: 'Gifter – AI Gifting Concierge for Brands',
   description: 'I turn your products into unforgettable gifts. Join the brand waitlist for early access to Gifter.',
+  icons: {
+    icon: '/icon.png',
+    apple: '/apple-icon.png',
+  },
 }
 
 export default function RootLayout({

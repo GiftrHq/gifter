@@ -8,11 +8,46 @@ export default function WaitlistSection() {
   const [email, setEmail] = useState('')
   const [brandName, setBrandName] = useState('')
   const [submitted, setSubmitted] = useState(false)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Form submission will be handled later
-    setSubmitted(true)
+    setLoading(true)
+    setError('')
+
+    try {
+      const response = await fetch('/api/subscribe', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          brandName: brandName || undefined,
+          //type: 'brand', // optional: if your API supports this field
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        // if you decide to return specific status codes (e.g. 409), you can handle them here
+        // if (response.status === 409) {
+        //   setSubmitted(true)
+        //   return
+        // }
+
+        throw new Error(data.error || 'Failed to sign up')
+      }
+
+      setSubmitted(true)
+    } catch (err: any) {
+      console.error('Waitlist signup error:', err)
+      setError(err.message || 'Something went wrong. Please try again.')
+    } finally {
+      setLoading(false)
+    }
   }
 
   const benefits = [
@@ -97,6 +132,11 @@ export default function WaitlistSection() {
 
         <FadeIn delay={0.3}>
           <form onSubmit={handleSubmit} className="space-y-6 max-w-xl mx-auto">
+            {error && (
+              <div className="px-6 py-4 bg-red-500/10 border-2 border-red-500/50 text-red-200">
+                {error}
+              </div>
+            )}
             <div>
               <input
                 type="email"
@@ -104,7 +144,8 @@ export default function WaitlistSection() {
                 placeholder="Work email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full px-6 py-4 bg-white text-black border-2 border-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                disabled={loading}
+                className="w-full px-6 py-4 bg-white text-black border-2 border-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all disabled:opacity-50"
               />
             </div>
             <div>
@@ -113,11 +154,12 @@ export default function WaitlistSection() {
                 placeholder="Brand name (optional)"
                 value={brandName}
                 onChange={(e) => setBrandName(e.target.value)}
-                className="w-full px-6 py-4 bg-transparent text-white border-2 border-white/30 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all placeholder:text-gray-400"
+                disabled={loading}
+                className="w-full px-6 py-4 bg-transparent text-white border-2 border-white/30 focus:border-white focus:outline-none focus:ring-2 focus:ring-white/50 transition-all placeholder:text-gray-400 disabled:opacity-50"
               />
             </div>
-            <Button variant="secondary" className="w-full">
-              Join the Brand Waitlist
+            <Button variant="secondary" className="w-full" disabled={loading}>
+              {loading ? 'Joining...' : 'Join the Brand Waitlist'}
             </Button>
             <p className="text-sm text-gray-400 text-center">
               I'll only email when I have something genuinely useful to share.

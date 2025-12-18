@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import FadeIn from '../FadeIn'
 import Button from '../Button'
 
@@ -30,6 +31,18 @@ export default function FooterSection() {
         </FadeIn>
 
         <div className="border-t border-white/10 pt-12">
+          <FadeIn delay={0.25}>
+            <div className="flex justify-center mb-8">
+              <Image
+                src="/logo.png"
+                alt="Gifter"
+                width={48}
+                height={48}
+                className="opacity-90"
+              />
+            </div>
+          </FadeIn>
+
           <FadeIn delay={0.3}>
             <div className="flex flex-col md:flex-row justify-center items-center gap-6 md:gap-12 text-sm text-gray-400">
               <span>© Gifter {currentYear}</span>
