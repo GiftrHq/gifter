@@ -9,7 +9,7 @@ interface ButtonProps {
   onClick?: () => void
   href?: string
   className?: string
-  disabled: boolean
+  disabled?: boolean
 }
 
 export default function Button({
