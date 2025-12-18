@@ -9,6 +9,7 @@ interface ButtonProps {
   onClick?: () => void
   href?: string
   className?: string
+  disabled: boolean
 }
 
 export default function Button({
@@ -16,8 +17,8 @@ export default function Button({
   variant = 'primary',
   onClick,
   href,
-  className = ''
-
+  className = '',
+  disabled = false,
 }: ButtonProps) {
   const baseStyles = "px-8 py-4 text-base font-medium transition-all duration-200 ease-out"
 
@@ -48,6 +49,7 @@ export default function Button({
       className={`${baseStyles} ${variantStyles[variant]} ${className}`}
       whileHover={{ scale: 1.02 }}
       transition={{ duration: 0.15 }}
+      disabled={disabled}
     >
       {children}
     </Component>
