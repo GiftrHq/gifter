@@ -1,0 +1,118 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --font-playfair: 'Playfair Display', serif;
+    --font-inter: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  body {
+    @apply bg-panelBlack text-panelWhite font-inter antialiased;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-panelBlack;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-panelSoftGray;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-panelGray;
+  }
+}
+
+@layer components {
+  /* Primary Button */
+  .btn-primary {
+    @apply bg-panelWhite text-panelBlack px-6 py-3 rounded-xl font-medium;
+    @apply transition-all duration-200 ease-out;
+    @apply hover:scale-105 hover:shadow-lg;
+    @apply disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:shadow-none;
+  }
+
+  /* Secondary Button */
+  .btn-secondary {
+    @apply bg-transparent text-panelWhite px-6 py-3 rounded-xl font-medium;
+    @apply border border-panelWhite/50 transition-all duration-200;
+    @apply hover:border-panelWhite hover:bg-panelWhite/5;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-panelOffBlack border border-panelSoftGray rounded-2xl p-6;
+    @apply transition-all duration-200;
+  }
+
+  .card-hover {
+    @apply card hover:border-panelGray/50 hover:-translate-y-1;
+  }
+
+  /* Input */
+  .input {
+    @apply bg-panelBlack border border-panelSoftGray rounded-lg px-4 py-2;
+    @apply text-panelWhite placeholder:text-panelGray;
+    @apply focus:outline-none focus:border-panelGray transition-colors;
+  }
+
+  /* Label */
+  .label {
+    @apply text-xs uppercase tracking-wider text-panelGray font-medium;
+  }
+
+  /* Heading styles */
+  .h1 {
+    @apply font-playfair text-4xl md:text-5xl font-light;
+  }
+
+  .h2 {
+    @apply font-playfair text-3xl md:text-4xl font-light;
+  }
+
+  .h3 {
+    @apply font-playfair text-2xl md:text-3xl font-light;
+  }
+
+  .h4 {
+    @apply font-inter text-xl md:text-2xl font-medium;
+  }
+}
+
+/* Animation utilities */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out forwards;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}

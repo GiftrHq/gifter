@@ -7,7 +7,9 @@
     "build": "turbo run build",
     "lint": "turbo run lint",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "clean": "turbo run clean && rm -rf node_modules"
+    "clean": "turbo run clean && rm -rf node_modules",
+    "dev:api": "npm run dev --workspace apps/api",
+    "build:api": "npm run build --workspace apps/api"
   },
   "devDependencies": {
     "prettier": "^3.3.3",
@@ -18,7 +20,6 @@
     "node": ">=18"
   },
   "workspaces": [
-    "apps/*",
-    "packages/*"
+    "apps/*"
   ]
 }
