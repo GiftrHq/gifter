@@ -35,7 +35,7 @@ export const notifyCoreApiOnOrderStatusChange: CollectionAfterChangeHook = async
 
       const payload = {
         event: isPaid ? 'order.paid' : 'order.refunded',
-        orderId: doc.id,
+        orderId: doc.id.toString(),
         order: {
           id: doc.id,
           orderNumber: doc.orderNumber,
@@ -54,11 +54,12 @@ export const notifyCoreApiOnOrderStatusChange: CollectionAfterChangeHook = async
       }
 
       // Send to Core API
-      const response = await fetch(`${coreApiUrl}/internal/commerce/order-sync`, {
+      const response = await fetch(`${coreApiUrl}/v1/integrations/payload/order-status-changed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${coreApiSecret}`,
+          'X-Internal-Webhook-Secret': coreApiSecret,
+          'X-Event-Name': 'order.status_changed',
         },
         body: JSON.stringify(payload),
       })

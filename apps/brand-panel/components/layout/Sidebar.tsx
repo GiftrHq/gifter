@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/auth/AuthContext'
 import clsx from 'clsx'
+import NextImage from "next/image";
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: '📊' },
@@ -23,7 +24,16 @@ export function Sidebar() {
       {/* Logo */}
       <div className="mb-8">
         <div className="flex items-center gap-3">
-          <div className="h-8 w-8 rounded-full bg-panelWhite" />
+          <div className="relative h-8 w-8 overflow-hidden rounded-full">
+            <NextImage
+              src="/logo-transparent.png"
+              alt="Gifter logo"
+              fill
+              className="object-contain"
+              priority
+            />
+          </div>
+
           <div>
             <h1 className="text-sm font-medium">Gifter</h1>
             <p className="text-xs text-panelGray">for Brands</p>

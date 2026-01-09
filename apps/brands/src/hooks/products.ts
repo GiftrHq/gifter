@@ -39,33 +39,78 @@ export const notifyCoreApiOnProductChange: CollectionAfterChangeHook = async ({
         return doc
       }
 
+      // Fetch variants if product has them
+      let variants = []
+      if (doc.hasVariants) {
+        const variantsResult = await req.payload.find({
+          collection: 'productVariants',
+          where: {
+            product: {
+              equals: doc.id,
+            },
+          },
+        })
+        variants = variantsResult.docs.map((v) => ({
+          payloadVariantId: v.id,
+          sku: v.sku,
+          optionValues: v.optionValues || [],
+          price: v.price,
+          currency: v.currency,
+          stock: v.stock,
+          stripePriceId: v.stripePriceId,
+        }))
+      }
+
+      // Get image URLs
+      let primaryImageUrl = null
+      if (doc.primaryImage && typeof doc.primaryImage === 'object') {
+        primaryImageUrl = doc.primaryImage.url
+      }
+
+      const galleryImageUrls = (doc.gallery || [])
+        .filter((item) => item?.image && typeof item.image === 'object')
+        .map((item) => (item.image as any).url)
+
       const payload = {
-        event: isPublished ? 'product.published' : 'product.archived',
-        productId: doc.id,
+        event: 'product.changed',
+        payloadProductId: doc.id.toString(),
+        brand: {
+          payloadBrandId: brand.id.toString(),
+          name: brand.name,
+          status: brand.status,
+          country: brand.country,
+          baseCurrency: brand.baseCurrency,
+          logoUrl: brand.logo && typeof brand.logo === 'object' ? brand.logo.url : null,
+          coverImageUrl: brand.coverImage && typeof brand.coverImage === 'object' ? brand.coverImage.url : null,
+        },
         product: {
-          id: doc.id,
           title: doc.title,
           slug: doc.slug,
+          status: doc.status,
+          visibleToGifter: true,
+          isFeatured: doc.isFeatured || false,
           shortDescription: doc.shortDescription,
-          brandId: brand.id,
-          brandName: brand.name,
-          primaryImage: doc.primaryImage,
-          gallery: doc.gallery,
-          giftTags: doc.giftTags,
-          occasionFit: doc.occasionFit,
-          styleTags: doc.styleTags,
+          description: doc.description,
+          specs: doc.specs,
+          primaryImageUrl,
+          galleryImageUrls,
           defaultPrice: doc.defaultPrice,
           defaultCurrency: doc.defaultCurrency,
-          hasVariants: doc.hasVariants,
+          giftTags: doc.giftTags || [],
+          occasionFit: doc.occasionFit || [],
+          styleTags: doc.styleTags || [],
         },
+        variants,
+        ts: new Date().toISOString(),
       }
 
       // Send to Core API
-      const response = await fetch(`${coreApiUrl}/internal/commerce/product-sync`, {
+      const response = await fetch(`${coreApiUrl}/v1/integrations/payload/product-changed`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${coreApiSecret}`,
+          'X-Internal-Webhook-Secret': coreApiSecret,
+          'X-Event-Name': 'product.changed',
         },
         body: JSON.stringify(payload),
       })

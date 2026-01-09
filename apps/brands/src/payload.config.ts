@@ -66,12 +66,12 @@ export default buildConfig({
   ],
   cors: [
     process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:3001',
-    process.env.CORE_API_URL || 'http://localhost:3000',
+    process.env.CORE_API_URL || 'http://localhost:4000',
     'http://localhost:3002', // Brand Panel frontend
   ].filter(Boolean) as string[],
   csrf: [
     process.env.PAYLOAD_PUBLIC_SERVER_URL || 'http://localhost:3001',
-    process.env.CORE_API_URL || 'http://localhost:3000',
+    process.env.CORE_API_URL || 'http://localhost:4000',
     'http://localhost:3002', // Brand Panel frontend
   ].filter(Boolean) as string[],
   endpoints: [

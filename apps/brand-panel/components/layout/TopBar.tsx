@@ -16,13 +16,21 @@ export function TopBar() {
     ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}`.toUpperCase() || user.email[0].toUpperCase()
     : 'U'
 
+
   // Get brand logo URL if available
   const brandLogo = brand?.logo && typeof brand.logo === 'object' ? brand.logo : null
+  // Use PAYLOAD_URL for server-side (Docker), NEXT_PUBLIC_PAYLOAD_URL for client-side
+  const payloadUrl = typeof window === 'undefined'
+    ? (process.env.PAYLOAD_URL || process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001')
+    : (process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001')
+
   const brandLogoUrl = brandLogo?.url
     ? (brandLogo.url.startsWith('http')
-        ? brandLogo.url
-        : `${process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001'}${brandLogo.url}`)
+      ? brandLogo.url
+      : `${payloadUrl}${brandLogo.url}`)
     : null
+
+  console.log(`Brand URL: ${brandLogoUrl}`)
 
   const handleLogoutClick = () => {
     setShowLogoutConfirm(true)

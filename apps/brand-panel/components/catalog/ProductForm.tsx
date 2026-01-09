@@ -4,8 +4,9 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/lib/auth/AuthContext'
 import { apiClient } from '@/lib/api/client'
-import { Product, Media } from '@/lib/types/payload'
+import { Product, Media, ProductVariant } from '@/lib/types/payload'
 import { ImageUpload } from '@/components/media/ImageUpload'
+import { VariantManager } from './VariantManager'
 
 interface ProductFormProps {
   product?: Product // If editing an existing product
@@ -62,9 +63,19 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
   const [gallery, setGallery] = useState<Media[]>(
     product?.gallery?.map((g) => g.image as Media) || []
   )
-  const [giftTags, setGiftTags] = useState<string[]>(
-    product?.giftTags?.map((t) => t.tag) || []
-  )
+
+  // Pending variants for create mode
+  const [pendingVariants, setPendingVariants] = useState<ProductVariant[]>([])
+
+  const [giftTags, setGiftTags] = useState<string[]>([])
+  const [giftTagsInput, setGiftTagsInput] = useState('')
+
+  useEffect(() => {
+    const tags = product?.giftTags?.map(t => t.tag) ?? []
+    setGiftTags(tags)
+    setGiftTagsInput(tags.join(', '))
+  }, [product?.id]) // use id so it doesn't constantly reset
+
 
   // Generate slug from title (matches server-side logic)
   const generateSlug = (title: string) => {
@@ -96,6 +107,11 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
     setError(null)
     setSaveStatus('saving')
 
+    const tags = parseTags(giftTagsInput)
+    setGiftTags(tags)
+
+    const payloadGiftTags = tags.map(tag => ({ tag }))
+
     try {
       const slug = generateSlug(formData.title)
 
@@ -105,7 +121,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
         brand: brand?.id,
         primaryImage: primaryImage?.id,
         gallery: gallery.map((img) => ({ image: img.id })),
-        giftTags: giftTags.map((tag) => ({ tag })),
+        giftTags: payloadGiftTags,
         status: publishAfterSave ? 'published' : formData.status,
       }
 
@@ -117,6 +133,18 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
       } else {
         // Create new product
         savedProduct = await apiClient.create<Product>('products', productData)
+
+        // If we have pending variants, create them now
+        if (formData.hasVariants && pendingVariants.length > 0) {
+          await Promise.all(pendingVariants.map(variant => {
+            // Remove temp ID and assign real product ID
+            const { id, ...variantData } = variant
+            return apiClient.create('productVariants', {
+              ...variantData,
+              product: savedProduct.id
+            })
+          }))
+        }
       }
 
       setSaveStatus('saved')
@@ -155,6 +183,12 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
       setError(err.message || 'Failed to archive product')
     }
   }
+
+  const parseTags = (value: string) =>
+    value
+      .split(',')
+      .map(t => t.trim())
+      .filter(Boolean)
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 pb-20">
@@ -426,10 +460,13 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
             )}
 
             {formData.hasVariants && (
-              <div className="rounded-lg border border-panelSoftGray bg-panelSoftGray/20 p-4">
-                <p className="text-sm text-panelGray">
-                  Product variants will be managed after saving this product.
-                </p>
+              <div className="rounded-lg border border-panelSoftGray bg-panelSoftGray/10 p-4">
+                <VariantManager
+                  productId={product?.id}
+                  defaultCurrency={formData.defaultCurrency}
+                  initialPendingVariants={pendingVariants}
+                  onPendingChange={setPendingVariants}
+                />
               </div>
             )}
           </div>
@@ -441,17 +478,18 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
           <div className="card space-y-4">
             <h3 className="h4">Gift Context</h3>
 
+
+
             <div>
               <label className="label mb-2 block">Gift Tags</label>
               <textarea
-                value={giftTags.join(', ')}
+                value={giftTagsInput}
                 onChange={(e) => {
-                  const tags = e.target.value
-                    .split(',')
-                    .map((t) => t.trim())
-                    .filter((t) => t.length > 0)
-                  setGiftTags(tags)
+                  setGiftTagsInput(e.target.value) // let user type freely
                   setSaveStatus('idle')
+                }}
+                onBlur={() => {
+                  setGiftTags(parseTags(giftTagsInput)) // commit parsed tags
                 }}
                 className="input w-full"
                 rows={3}
@@ -461,6 +499,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
                 Comma-separated tags for AI gift matching
               </p>
             </div>
+
 
             <div>
               <label className="label mb-2 block">Occasions</label>

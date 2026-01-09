@@ -1,3 +1,4 @@
+import qs from 'qs'
 import type { PayloadResponse, PayloadDoc, PayloadError } from '../types/payload'
 
 const API_URL = process.env.NEXT_PUBLIC_PAYLOAD_URL || 'http://localhost:3001'
@@ -86,29 +87,26 @@ class PayloadAPIClient {
       page?: number
       sort?: string
       depth?: number
+      draft?: boolean
     }
   ): Promise<PayloadResponse<T>> {
-    const searchParams = new URLSearchParams()
+    const query = qs.stringify(
+      {
+        where: params?.where,
+        limit: params?.limit,
+        page: params?.page,
+        sort: params?.sort,
+        depth: params?.depth,
+        draft: params?.draft,
+      },
+      {
+        addQueryPrefix: true,
+        encodeValuesOnly: true, // important: keeps brackets readable for Payload
+        skipNulls: true,
+      }
+    )
 
-    if (params?.where) {
-      searchParams.set('where', JSON.stringify(params.where))
-    }
-    if (params?.limit) {
-      searchParams.set('limit', params.limit.toString())
-    }
-    if (params?.page) {
-      searchParams.set('page', params.page.toString())
-    }
-    if (params?.sort) {
-      searchParams.set('sort', params.sort)
-    }
-    if (params?.depth) {
-      searchParams.set('depth', params.depth.toString())
-    }
-
-    const query = searchParams.toString()
-    const url = `/api/${collection}${query ? `?${query}` : ''}`
-
+    const url = `/api/${collection}${query}`
     return this.request<PayloadResponse<T>>(url)
   }
 
