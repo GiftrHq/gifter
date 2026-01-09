@@ -1,0 +1,122 @@
+version: '3.8'
+
+services:
+  # Shared PostgreSQL Database
+  postgres:
+    container_name: gifter-postgres
+    image: pgvector/pgvector:pg15
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gifter-network
+  # Core API (apps/api)
+  api:
+    container_name: gifter-api
+    image: node:18-alpine
+    ports:
+      - "4000:4000"
+    volumes:
+      - ./apps/api:/app
+      - api_node_modules:/app/node_modules
+    working_dir: /app
+    command: sh -c "npm install && npx prisma generate && npm run dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - PORT=4000
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/gifter_core
+    networks:
+      - gifter-network
+    restart: unless-stopped
+
+  # Brands/Payload CMS (apps/brands)
+  brands:
+    container_name: gifter-brands
+    image: node:18-alpine
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./apps/brands:/home/node/app
+      - brands_node_modules:/home/node/app/node_modules
+    working_dir: /home/node/app
+    command: sh -c "corepack enable && corepack prepare pnpm@latest --activate && pnpm install && pnpm dev"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/gifterdb
+      - PAYLOAD_PUBLIC_SERVER_URL=http://localhost:3001
+      - CORE_API_URL=http://api:4000
+    env_file:
+      - ./apps/brands/.env
+    networks:
+      - gifter-network
+    restart: unless-stopped
+
+  # Brand Panel (apps/brand-panel) - Optional for local development
+  brand-panel:
+    container_name: gifter-brand-panel
+    image: node:18-alpine
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./apps/brand-panel:/app
+      - brand_panel_node_modules:/app/node_modules
+    working_dir: /app
+    command: sh -c "npm install && npm run dev"
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_PAYLOAD_URL=http://localhost:3001
+      - PAYLOAD_URL=http://brands:3001
+    env_file:
+      - ./apps/brand-panel/.env.local
+    networks:
+      - gifter-network
+    restart: unless-stopped
+
+    # Redis (BullMQ queues, caching)
+  redis:
+    container_name: gifter-redis
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - gifter-network
+
+
+volumes:
+  postgres_data:
+  api_node_modules:
+  brands_node_modules:
+  brand_panel_node_modules:
+  redis_data:
+
+
+networks:
+  gifter-network:
+    driver: bridge

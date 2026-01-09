@@ -1,9 +1,10 @@
-import { JsonController, Get } from 'routing-controllers';
+import { FastifyRequest, FastifyReply } from 'fastify';
+import { ENV } from '../config/env';
 
-@JsonController('/health')
-export class HealthController {
-    @Get()
-    health() {
-        return { status: 'ok' };
-    }
+export async function healthCheck(request: FastifyRequest, reply: FastifyReply) {
+  return reply.send({
+    ok: true,
+    env: ENV.NODE_ENV,
+    version: '1.0.0',
+  });
 }

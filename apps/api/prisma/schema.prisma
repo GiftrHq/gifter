@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,875 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  DISABLED
+  DELETED
+}
+
+enum RecipientType {
+  USER
+  EXTERNAL
+}
+
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  DECLINED
+  BLOCKED
+}
+
+enum WishlistVisibility {
+  PRIVATE
+  FRIENDS
+  PUBLIC
+}
+
+enum OccasionType {
+  BIRTHDAY
+  ANNIVERSARY
+  HOUSEWARMING
+  WEDDING
+  BABY_SHOWER
+  THANK_YOU
+  JUST_BECAUSE
+  OTHER
+}
+
+enum OccasionRecurrence {
+  NONE
+  YEARLY
+}
+
+enum NotificationChannel {
+  PUSH
+  EMAIL
+}
+
+enum NotificationStatus {
+  QUEUED
+  SENT
+  FAILED
+}
+
+enum ProductPublishStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+enum EmbeddingEntityType {
+  PRODUCT
+  TASTE_PROFILE
+  BRAND
+  USER_PREF
+}
+
+enum JobStatus {
+  QUEUED
+  RUNNING
+  SUCCEEDED
+  FAILED
+  CANCELLED
+}
+
+enum RecommendationAction {
+  IMPRESSION
+  CLICK
+  LIKE
+  DISLIKE
+  SAVE
+  HIDE
+  BOUGHT
+}
+
+enum LlmPurpose {
+  PRODUCT_ENRICHMENT
+  CURATED_COLLECTIONS
+  RECOMMENDATION_RERANK
+  ONBOARDING_QUESTIONS
+  EXPLANATIONS
+}
+
+enum InteractionSource {
+  RECOMMENDATION
+  CURATED_COLLECTION
+  SEARCH
+  PRODUCT_PAGE
+  WISHLIST
+  SHARE_LINK
+}
+
+enum EmbeddingKind {
+  PROFILE_CANONICAL
+  PROFILE_STYLE
+  PROFILE_INTERESTS
+  PROFILE_VALUES
+  PROFILE_INTERACTIONS
+  PRODUCT_SEMANTIC
+  PRODUCT_STYLE
+  BRAND_CENTROID
+  OTHER
+}
+
+enum ModelRunStatus {
+  RUNNING
+  COMPLETED
+  FAILED
+}
+
+model User {
+  id              String     @id @default(cuid())
+  email           String    @unique
+  emailVerified   Boolean    @default(false)
+  name String @default("")
+  image           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  passkeys Passkey[]
+
+  sessions        Session[]
+  accounts        Account[]
+
+  status          UserStatus @default(ACTIVE)
+
+  authUserId      String?
+  onboardingStep  Int        @default(0)
+
+  phone           String?    @unique
+
+  displayName     String? // Kept for legacy if needed, or removed if not
+  avatarUrl       String? // Kept for legacy if needed, or removed if not
+
+  timezone        String     @default("Europe/London")
+  defaultCurrency String     @default("GBP")
+
+  profile         UserProfile?
+  devices         Device[]
+  prefs           NotificationPreference?
+
+  outgoingFriendRequests FriendRequest[] @relation("OutgoingFriendRequests")
+  incomingFriendRequests FriendRequest[] @relation("IncomingFriendRequests")
+
+  friendshipsA    Friendship[] @relation("FriendshipA")
+  friendshipsB    Friendship[] @relation("FriendshipB")
+
+  recipients      Recipient[]  @relation("OwnerRecipients")
+  occasions       Occasion[]   @relation("OwnerOccasions")
+  wishlists       Wishlist[]   @relation("OwnerWishlists")
+
+  tasteProfiles   TasteProfile[] @relation("OwnerTasteProfiles")
+
+  recommendationRequests RecommendationRequest[]
+  recommendationEvents   RecommendationEvent[]
+  notifications   Notification[]
+  telemetryEvents TelemetryEvent[]
+  schedules       NotificationSchedule[]
+  addresses       Address[]
+  linkedRecipients Recipient[]
+  productInteractions ProductInteraction[]
+  preferenceState UserPreferenceState?
+
+  @@index([createdAt])
+}
+
+model UserProfile {
+  userId     String   @id
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  birthday   DateTime?
+  bio        String?
+  location   String?
+  interests  Json?
+
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Device {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  platform    String
+  token       String   @unique
+  appVersion  String?
+  buildNumber String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
+}
+
+model FriendRequest {
+  id          String           @id @default(cuid())
+  fromUserId  String
+  toUserId    String
+  status      FriendshipStatus @default(PENDING)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  fromUser User @relation("OutgoingFriendRequests", fields: [fromUserId], references: [id], onDelete: Cascade)
+  toUser   User @relation("IncomingFriendRequests", fields: [toUserId], references: [id], onDelete: Cascade)
+
+  @@unique([fromUserId, toUserId])
+  @@index([toUserId, status])
+}
+
+model Friendship {
+  id        String           @id @default(cuid())
+  userAId   String
+  userBId   String
+  status    FriendshipStatus @default(ACCEPTED)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  userA User @relation("FriendshipA", fields: [userAId], references: [id], onDelete: Cascade)
+  userB User @relation("FriendshipB", fields: [userBId], references: [id], onDelete: Cascade)
+
+  @@unique([userAId, userBId])
+  @@index([userAId])
+  @@index([userBId])
+}
+
+model Recipient {
+  id           String        @id @default(cuid())
+  ownerUserId  String
+  owner        User          @relation("OwnerRecipients", fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  type         RecipientType
+  userId       String?
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  name         String?
+  relationship String?
+  avatarUrl    String?
+  birthday     DateTime?
+  notes        String?
+
+  isTemporary  Boolean       @default(false)
+  expiresAt    DateTime?
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  occasions    Occasion[]
+  wishlists    Wishlist[]
+  tasteProfiles TasteProfile[]
+  recommendationRequests RecommendationRequest[]
+  productInteractions ProductInteraction[]
+
+  @@index([ownerUserId])
+  @@index([userId])
+  @@index([isTemporary, expiresAt])
+}
+
+model Occasion {
+  id           String             @id @default(cuid())
+  ownerUserId  String
+  owner        User               @relation("OwnerOccasions", fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  recipientId  String
+  recipient    Recipient          @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  type         OccasionType
+  title        String?
+  date         DateTime
+  timezone     String             @default("Europe/London")
+  isAllDay     Boolean            @default(true)
+  recurrence   OccasionRecurrence @default(NONE)
+
+  reminderPolicyId String?
+  reminderPolicy   ReminderPolicy? @relation(fields: [reminderPolicyId], references: [id], onDelete: SetNull)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  schedules    NotificationSchedule[]
+  recommendationRequests RecommendationRequest[]
+
+  @@index([ownerUserId, date])
+  @@index([recipientId, date])
+}
+
+model ReminderPolicy {
+  id          String  @id @default(cuid())
+  ownerUserId String?
+  name        String
+  offsets     Json
+  channels    Json
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  occasions   Occasion[]
+  preferences NotificationPreference[]
+
+  @@index([ownerUserId])
+}
+
+model NotificationPreference {
+  userId       String  @id
+  user         User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  pushEnabled  Boolean @default(true)
+  emailEnabled Boolean @default(false)
+
+  quietHours   Json?
+  defaultReminderPolicyId String?
+  defaultReminderPolicy   ReminderPolicy? @relation(fields: [defaultReminderPolicyId], references: [id], onDelete: SetNull)
+
+  updatedAt    DateTime @updatedAt
+}
+
+model NotificationSchedule {
+  id            String              @id @default(cuid())
+  userId        String
+  user          User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  occasionId    String?
+  occasion      Occasion?           @relation(fields: [occasionId], references: [id], onDelete: Cascade)
+
+  channel       NotificationChannel
+  scheduledFor  DateTime
+  payload       Json
+  status        NotificationStatus  @default(QUEUED)
+
+  attempts      Int                 @default(0)
+  lastError     String?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([userId, scheduledFor])
+  @@index([status, scheduledFor])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  title     String
+  body      String
+  data      Json?
+  readAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+}
+
+model Wishlist {
+  id           String             @id @default(cuid())
+  ownerUserId  String
+  owner        User               @relation("OwnerWishlists", fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  recipientId  String?
+  recipient    Recipient?         @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  title        String
+  visibility   WishlistVisibility  @default(PRIVATE)
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  items        WishlistItem[]
+
+  @@index([ownerUserId])
+  @@index([recipientId])
+}
+
+model WishlistItem {
+  id           String   @id @default(cuid())
+  wishlistId   String
+  wishlist     Wishlist @relation(fields: [wishlistId], references: [id], onDelete: Cascade)
+
+  productId    String?
+  product      ProductMirror? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  externalUrl  String?
+  notes        String?
+  priority     Int?
+  desiredPrice Int?
+
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([wishlistId, createdAt])
+  @@index([productId])
+}
+
+model BrandMirror {
+  id              String   @id @default(cuid())
+  payloadBrandId  String   @unique
+
+  name            String
+  slug            String?
+  status          String?
+  country         String?
+  baseCurrency    String?
+
+  logoUrl         String?
+  coverImageUrl   String?
+  giftFit         String?
+  styleTags       Json?
+
+  stripeConnectAccountId String?
+  stripeOnboardingStatus String?
+
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  products        ProductMirror[]
+
+  @@index([status])
+}
+
+model ProductMirror {
+  id               String   @id @default(cuid())
+  payloadProductId String   @unique
+
+  brandId          String
+  brand            BrandMirror @relation(fields: [brandId], references: [id], onDelete: Cascade)
+
+  title            String
+  slug             String?
+  status           ProductPublishStatus @default(DRAFT)
+  visibleToGifter  Boolean  @default(true)
+  isFeatured       Boolean  @default(false)
+
+  shortDescription String?
+  description      String?
+  specs            String?
+
+  primaryImageUrl  String?
+  galleryImageUrls Json?
+
+  defaultPrice     Int?
+  defaultCurrency  String?
+
+  giftTags         Json?
+  occasionFit      Json?
+  styleTags        Json?
+
+  enrichment       Json?
+  enrichmentVersion Int @default(0)
+
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  variants         VariantMirror[]
+  embeddings       ProductEmbedding[]
+  wishlistItems    WishlistItem[]
+  recommendationItems RecommendationItem[]
+  recommendationEvents RecommendationEvent[]
+  curatedCollectionItems CuratedCollectionItem[]
+  productInteractions ProductInteraction[]
+
+  @@index([brandId, status])
+  @@index([status, isFeatured])
+}
+
+model VariantMirror {
+  id                String @id @default(cuid())
+  payloadVariantId  String @unique
+
+  productId         String
+  product           ProductMirror @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  sku               String
+  optionValues      Json
+  price             Int
+  currency          String
+  stock             Int?
+
+  stripePriceId     String?
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([productId])
+}
+
+model ProductEmbedding {
+  id          String @id @default(cuid())
+  productId   String
+  product     ProductMirror @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  provider    String
+  model       String
+  dims        Int
+
+  vector      Unsupported("vector(1536)")
+  textHash    String
+
+  createdAt   DateTime @default(now())
+
+  @@index([productId])
+  @@index([model])
+}
+
+model TasteProfile {
+  id            String @id @default(cuid())
+  ownerUserId   String
+  owner         User   @relation("OwnerTasteProfiles", fields: [ownerUserId], references: [id], onDelete: Cascade)
+
+  recipientId   String?
+  recipient     Recipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  mode          String
+  name          String?
+
+  answers       Json?
+  facets        Json?
+
+  provider      String?
+  model         String?
+  dims          Int?
+
+  vector        Unsupported("vector(1536)")?
+  vectorUpdatedAt DateTime?
+
+  isTemporary   Boolean @default(false)
+  expiresAt     DateTime?
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([ownerUserId])
+  @@index([recipientId])
+  @@index([isTemporary, expiresAt])
+}
+
+model RecommendationRequest {
+  id          String @id @default(cuid())
+  userId      String
+  user        User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  recipientId String?
+  recipient   Recipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  occasionId  String?
+  occasion    Occasion? @relation(fields: [occasionId], references: [id], onDelete: SetNull)
+
+  budget      Json?
+  constraints Json?
+  context     Json?
+
+  createdAt   DateTime @default(now())
+
+  items       RecommendationItem[]
+  actions     RecommendationEvent[]
+
+  @@index([userId, createdAt])
+  @@index([recipientId, createdAt])
+}
+
+model RecommendationItem {
+  id          String @id @default(cuid())
+  requestId   String
+  request     RecommendationRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+
+  productId   String
+  product     ProductMirror @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  rank        Int
+  score       Float
+  explanation String?
+  badges      Json?
+
+  source      String? // e.g. "vector_recall", "trending", "curated"
+  candidateReason String?
+
+  createdAt   DateTime @default(now())
+
+  @@unique([requestId, productId])
+  @@index([requestId, rank])
+}
+
+model RecommendationEvent {
+  id          String @id @default(cuid())
+  requestId   String?
+  request     RecommendationRequest? @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  userId      String?
+  user        User? @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  productId   String?
+  product     ProductMirror? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  action      RecommendationAction
+  props       Json?
+  surface   String?
+  position  Int?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([productId, createdAt])
+  @@index([surface, createdAt])
+}
+
+model ProductInteraction {
+  id        String @id @default(cuid())
+  userId    String?
+  user      User?  @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  recipientId String?
+  recipient   Recipient? @relation(fields: [recipientId], references: [id], onDelete: SetNull)
+
+  productId  String
+  product    ProductMirror @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  action    RecommendationAction // Reusing existing enum
+  source    InteractionSource
+  weight    Float?   // optional explicit weight
+  props     Json?
+  ts        DateTime @default(now())
+
+  @@index([userId, ts])
+  @@index([productId, ts])
+  @@index([recipientId, ts])
+}
+
+model CuratedCollection {
+  id          String @id @default(cuid())
+  key         String?
+  title       String
+  subtitle    String?
+  description String?
+
+  surface     String
+  filters     Json?
+
+  generatedBy String?
+  modelRunId  String?
+  modelRun    ModelRun? @relation(fields: [modelRunId], references: [id], onDelete: SetNull)
+
+  imageUrl    String?
+  metadata    Json?
+
+  validFrom   DateTime @default(now())
+  validTo     DateTime?
+
+  createdAt   DateTime @default(now())
+
+  items       CuratedCollectionItem[]
+
+  @@index([surface, validFrom])
+  @@index([key])
+}
+
+model CuratedCollectionItem {
+  id           String @id @default(cuid())
+  collectionId String
+  collection   CuratedCollection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  productId    String
+  product      ProductMirror @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  rank         Int
+  note         String?
+
+  @@unique([collectionId, productId])
+  @@index([collectionId, rank])
+}
+
+model ModelRun {
+  id            String @id @default(cuid())
+  purpose       LlmPurpose
+  provider      String
+  model         String
+
+  promptKey     String?
+  traceId       String?
+
+  inputTokens   Int?
+  outputTokens  Int?
+  latencyMs     Int?
+  costUsd       Float?
+
+  status        ModelRunStatus @default(RUNNING)
+  error         String?
+
+  input         Json?
+  output        Json?
+
+  createdAt     DateTime @default(now())
+
+  collections   CuratedCollection[]
+
+  @@index([purpose, createdAt])
+  @@index([traceId])
+}
+
+model EmbeddingJob {
+  id          String @id @default(cuid())
+  entityType  EmbeddingEntityType
+  entityId    String
+
+  provider    String
+  model       String
+  dims        Int
+
+  status      JobStatus @default(QUEUED)
+  attempts    Int @default(0)
+  scheduledAt DateTime @default(now())
+  startedAt   DateTime?
+  finishedAt  DateTime?
+
+  inputText   String?
+  error       String?
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status, scheduledAt])
+  @@index([entityType, entityId])
+}
+
+model Embedding {
+  id         String @id @default(cuid())
+  entityType EmbeddingEntityType
+  entityId   String
+  kind       EmbeddingKind
+
+  provider   String
+  model      String
+  dims       Int
+
+  vector     Unsupported("vector(1536)")
+  textHash   String?
+
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([kind])
+  @@index([model])
+  @@unique([entityType, entityId, kind, model])
+}
+
+model UserPreferenceState {
+  userId     String  @id
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider   String
+  model      String
+  dims       Int
+  vector     Unsupported("vector(1536)")
+  updatedAt  DateTime @updatedAt
+}
+
+model TelemetryEvent {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  sessionId String?
+  deviceId  String?
+
+  name      String
+  props     Json?
+  ts        DateTime @default(now())
+
+  @@index([name, ts])
+  @@index([userId, ts])
+  @@index([sessionId, ts])
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model Account {
+  id                    String    @id @default(cuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@unique([providerId, accountId])
+}
+
+model Verification {
+  id         String   @id @default(cuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+    @@index([identifier])
+
+}
+
+model Passkey {
+  id           String   @id @default(cuid())
+  name         String?
+  publicKey    String
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  credentialID String
+  counter      Int
+  deviceType   String
+  backedUp     Boolean
+  transports   String?
+  createdAt    DateTime @default(now())
+  aaguid       String?
+
+  @@index([userId])
+  @@index([credentialID])
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  label       String?  @default("Home")
+  line1       String
+  line2       String?
+  city        String
+  state       String?
+  postalCode  String
+  country     String
+  phoneNumber String?
+  
+  isDefault   Boolean  @default(false)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([userId])
 }

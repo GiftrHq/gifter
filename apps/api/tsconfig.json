@@ -1,9 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES2020",
-    "module": "commonjs",
-    "moduleResolution": "node",
-    "lib": ["ES2020"],
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "lib": [
+      "ES2020"
+    ],
     "strict": true,
     "esModuleInterop": true,
     "experimentalDecorators": true,
@@ -11,9 +13,13 @@
     "outDir": "dist",
     "rootDir": "src",
     "resolveJsonModule": true,
-    "typeRoots": ["./node_modules/@types"],
+    "typeRoots": [
+      "./node_modules/@types"
+    ],
     "skipLibCheck": true
   },
-  "include": ["src", "prisma"]
+  "include": [
+    "src",
+    "prisma"
+  ]
 }
-

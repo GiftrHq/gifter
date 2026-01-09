@@ -1,24 +1,48 @@
-import 'reflect-metadata';
-import express from 'express';
-import cors from 'cors';
-import { useExpressServer } from 'routing-controllers';
-import { HealthController } from './controllers/health.controller';
-// later import: AuthController, UserController, RecommendationsController, etc.
+import Fastify from 'fastify';
+import cors from '@fastify/cors';
+import { ENV } from './config/env';
+import { errorHandler } from './middleware/error.middleware';
+import { requestContextMiddleware } from './middleware/requestContext.middleware';
+import { registerRoutes } from './routes';
 
-export function createApp() {
-    const app = express();
+export async function createApp() {
+  const app = Fastify({
+    logger:
+      ENV.NODE_ENV === 'development'
+        ? {
+            level: ENV.LOG_LEVEL,
+            transport: {
+              target: 'pino-pretty',
+              options: {
+                colorize: true,
+                translateTime: 'HH:MM:ss Z',
+                ignore: 'pid,hostname',
+              },
+            },
+          }
+        : {
+            level: ENV.LOG_LEVEL,
+          },
+    requestIdHeader: 'x-request-id',
+    requestIdLogLabel: 'requestId',
+  });
 
-    app.use(cors());
-    app.use(express.json());
+  // Register CORS
+  await app.register(cors, {
+    origin: ENV.NODE_ENV === 'development' ? '*' : false,
+    credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  });
 
-    useExpressServer(app, {
-        routePrefix: '/api',
-        controllers: [
-            HealthController,
-            // add more controllers here
-        ],
-        defaultErrorHandler: false, // you can add your own error middleware
-    });
+  // Global middleware
+  app.addHook('preHandler', requestContextMiddleware);
 
-    return app;
+  // Error handler
+  app.setErrorHandler(errorHandler);
+
+  // Register all other routes
+  await registerRoutes(app);
+
+  return app;
 }
