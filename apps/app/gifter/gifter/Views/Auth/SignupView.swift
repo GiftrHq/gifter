@@ -6,17 +6,17 @@
 //
 
 import SwiftUI
+import AuthenticationServices
 
 struct SignupView: View {
     @EnvironmentObject var appState: AppState
     @Environment(\.dismiss) var dismiss
+    @StateObject private var viewModel = AuthViewModel()
 
     @State private var email = ""
     @State private var password = ""
     @State private var firstName = ""
     @State private var lastName = ""
-    @State private var errorMessage: String?
-    @State private var isLoading = false
 
     var body: some View {
         ZStack {
@@ -36,25 +36,78 @@ struct SignupView: View {
                     }
                     .padding(.top, 60)
 
+                    // Apple Sign In
                     VStack(spacing: 16) {
-                        CustomTextField(placeholder: "First name", text: $firstName)
-                        CustomTextField(placeholder: "Last name", text: $lastName)
-                        CustomTextField(placeholder: "Email", text: $email)
-                        CustomTextField(placeholder: "Password", text: $password, isSecure: true)
+                        StyledAppleSignInButton { result in
+                            Task {
+                                let success = await viewModel.handleAppleSignIn(result: result)
+                                if success {
+                                    dismiss()
+                                }
+                            }
+                        }
+
+                        HStack {
+                            Rectangle()
+                                .fill(GifterColors.gifterSoftGray)
+                                .frame(height: 1)
+                            Text("or")
+                                .font(.system(size: 14))
+                                .foregroundColor(GifterColors.gifterGray)
+                            Rectangle()
+                                .fill(GifterColors.gifterSoftGray)
+                                .frame(height: 1)
+                        }
                     }
 
-                    if let errorMessage = errorMessage {
+                    VStack(spacing: 16) {
+                        CustomTextField(placeholder: "First name", text: $firstName)
+                            .textContentType(.givenName)
+                            .autocapitalization(.words)
+
+                        CustomTextField(placeholder: "Last name", text: $lastName)
+                            .textContentType(.familyName)
+                            .autocapitalization(.words)
+
+                        CustomTextField(placeholder: "Email", text: $email)
+                            .textContentType(.emailAddress)
+                            .keyboardType(.emailAddress)
+                            .autocapitalization(.none)
+
+                        CustomTextField(placeholder: "Password (8+ characters)", text: $password, isSecure: true)
+                            .textContentType(.newPassword)
+                    }
+
+                    if let errorMessage = viewModel.errorMessage {
                         Text(errorMessage)
                             .font(.system(size: 14))
                             .foregroundColor(.red)
                             .multilineTextAlignment(.center)
                     }
 
-                    GifterButton(title: isLoading ? "Creating account..." : "Continue", style: .primary) {
-                        handleSignup()
+                    GifterButton(
+                        title: viewModel.isLoading ? "Creating account..." : "Continue",
+                        style: .primary
+                    ) {
+                        Task {
+                            let success = await viewModel.signUp(
+                                email: email,
+                                password: password,
+                                firstName: firstName,
+                                lastName: lastName
+                            )
+                            if success {
+                                // Don't dismiss - show email verification
+                            }
+                        }
                     }
-                    .disabled(isLoading || !isFormValid)
+                    .disabled(viewModel.isLoading || !isFormValid)
                     .opacity(isFormValid ? 1.0 : 0.5)
+
+                    Text("By signing up, you agree to our Terms of Service and Privacy Policy.")
+                        .font(.system(size: 12))
+                        .foregroundColor(GifterColors.gifterGray)
+                        .multilineTextAlignment(.center)
                 }
                 .padding(.horizontal, 32)
             }
@@ -65,34 +118,66 @@ struct SignupView: View {
                 GifterLogo(size: 36)
             }
         }
+        .sheet(isPresented: $viewModel.showEmailVerification) {
+            EmailVerificationSheet(
+                email: viewModel.verificationEmail ?? email,
+                isPresented: $viewModel.showEmailVerification
+            )
+        }
     }
 
     private var isFormValid: Bool {
-        !email.isEmpty && !password.isEmpty && !firstName.isEmpty && !lastName.isEmpty && password.count >= 6
+        !email.isEmpty && !password.isEmpty && !firstName.isEmpty && !lastName.isEmpty && password.count >= 8
     }
+}
 
-    private func handleSignup() {
-        isLoading = true
-        errorMessage = nil
+// MARK: - Email Verification Sheet
+struct EmailVerificationSheet: View {
+    let email: String
+    @Binding var isPresented: Bool
 
-        // Mock signup - in production, call auth API
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
-            let newUser = User(
-                id: UUID().uuidString,
-                firstName: firstName,
-                lastName: lastName,
-                email: email,
-                tasteProfile: nil,
-                occasions: [],
-                createdAt: Date()
-            )
+    var body: some View {
+        ZStack {
+            GifterColors.gifterBlack
+                .ignoresSafeArea()
 
-            appState.initializeAfterAuth(user: newUser)
-            isLoading = false
+            VStack(spacing: 24) {
+                Spacer()
+
+                Image(systemName: "envelope.circle.fill")
+                    .font(.system(size: 80))
+                    .foregroundColor(GifterColors.gifterWhite)
+
+                Text("Check your email")
+                    .gifterDisplayL()
+
+                Text("We've sent a verification link to:")
+                    .gifterBody()
+                    .foregroundColor(GifterColors.gifterGray)
+
+                Text(email)
+                    .gifterBody()
+                    .foregroundColor(GifterColors.gifterWhite)
+
+                Text("Click the link in the email to verify your account and start your gifting journey.")
+                    .gifterBody()
+                    .foregroundColor(GifterColors.gifterGray)
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 20)
+
+                Spacer()
+
+                GifterButton(title: "Got it", style: .primary) {
+                    isPresented = false
+                }
+            }
+            .padding(.horizontal, 32)
+            .padding(.vertical, 40)
         }
     }
 }
 
+// MARK: - Custom Text Field
 struct CustomTextField: View {
     let placeholder: String
     @Binding var text: String

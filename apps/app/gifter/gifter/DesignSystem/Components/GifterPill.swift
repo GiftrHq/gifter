@@ -53,6 +53,7 @@ struct GifterPill: View {
             .minimumScaleFactor(0.8)
             .padding(.horizontal, 20)
             .padding(.vertical, 12)
+            .multilineTextAlignment(.center)
             .background(
                 Capsule()
                     .fill(

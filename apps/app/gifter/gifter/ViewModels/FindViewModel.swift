@@ -6,3 +6,12 @@
 //
 
 import Foundation
+import SwiftUI
+
+@MainActor
+final class FindViewModel: ObservableObject {
+    @Published var searchText: String?
+    @Published var recentGiftingProfiles: [GiftingProfile] = []
+    
+    
+}

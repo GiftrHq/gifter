@@ -104,12 +104,12 @@ struct MockData {
     static let giftingProfiles: [GiftingProfile] = [
         GiftingProfile(
             id: "1",
-            name: "Sarah",
-            relationship: "Friend",
+            name: "Stella",
+            relationship: "Girlfriend",
             threeWords: ["Creative", "Minimalist", "Coffee-lover"],
             tasteProfile: nil,
             savedProducts: [],
-            lastGifted: Calendar.current.date(byAdding: .month, value: -3, to: Date()),
+            lastGifted: Calendar.current.date(byAdding: .day, value: -1, to: Date()),
             createdAt: Date()
         ),
         GiftingProfile(

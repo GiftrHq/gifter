@@ -7,5 +7,12 @@
 		<string>Inter-Regular.ttf</string>
 		<string>PlayfairDisplay-Regular.ttf</string>
 	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+		<string>fetch</string>
+		<string>processing</string>
+		<string>remote-notification</string>
+	</array>
 </dict>
 </plist>

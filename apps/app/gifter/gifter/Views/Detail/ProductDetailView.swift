@@ -107,13 +107,13 @@ struct ProductDetailView: View {
                         }
 
                         GifterButton(
-                            title: "View & buy from store",
+                            title: "Add to Cart",
                             style: .secondary
                         ) {
                             // Open store URL
                         }
 
-                        Text("I'll take you to the brand's store to complete the purchase.")
+                        Text("I'll take you to your cart to complete the purchase.")
                             .gifterCaption()
                             .multilineTextAlignment(.center)
                     }

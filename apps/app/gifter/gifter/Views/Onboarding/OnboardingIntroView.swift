@@ -9,8 +9,8 @@ import SwiftUI
 
 struct OnboardingIntroView: View {
     @EnvironmentObject var appState: AppState
-    @State private var showTasteProfile = false
-    @State private var skipOnboarding = false
+    @State private var showDynamicOnboarding = false
+    @State private var showLegacyOnboarding = false
 
     var body: some View {
         ZStack {
@@ -42,12 +42,11 @@ struct OnboardingIntroView: View {
 
                 VStack(spacing: 16) {
                     GifterButton(title: "Start", style: .primary) {
-                        showTasteProfile = true
+                        showDynamicOnboarding = true
                     }
 
                     Button(action: {
-                        skipOnboarding = true
-                        appState.hasCompletedOnboarding = true
+                        appState.skipOnboarding()
                     }) {
                         Text("Skip for now")
                             .font(.system(size: 15))
@@ -58,8 +57,9 @@ struct OnboardingIntroView: View {
                 .padding(.bottom, 60)
             }
         }
-        .fullScreenCover(isPresented: $showTasteProfile) {
-            TasteProfileView(mode: .userDeep)
+        .fullScreenCover(isPresented: $showDynamicOnboarding) {
+            DynamicOnboardingView(scenario: .newUser)
+                .environmentObject(appState)
         }
     }
 }

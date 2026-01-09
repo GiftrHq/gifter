@@ -152,7 +152,7 @@ struct TasteProfileView: View {
     private var optionsView: some View {
         let question = questions[currentQuestionIndex]
 
-        VStack(spacing: 12) {
+        VStack(alignment:.center, spacing: 12) {
             ForEach(question.options, id: \.self) { option in
                 let isSelected = question.multiSelect ?
                     selectedInterests.contains(option) :

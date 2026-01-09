@@ -15,7 +15,7 @@ struct AppView: View {
 
     var body: some View {
         ZStack {
-            if showSplash {
+            if showSplash || appState.isCheckingSession {
                 SplashView(isComplete: $splashComplete)
                     .transition(.opacity)
                     .zIndex(1)
@@ -25,7 +25,14 @@ struct AppView: View {
             }
         }
         .onChange(of: splashComplete) { newValue in
-            if newValue {
+            if newValue && !appState.isCheckingSession {
+                withAnimation(.easeOut(duration: 0.5)) {
+                    showSplash = false
+                }
+            }
+        }
+        .onChange(of: appState.isCheckingSession) { isChecking in
+            if !isChecking && splashComplete {
                 withAnimation(.easeOut(duration: 0.5)) {
                     showSplash = false
                 }
@@ -35,10 +42,14 @@ struct AppView: View {
 
     @ViewBuilder
     private var mainContent: some View {
+        #if DEBUG
+        let _ = print("AppView.mainContent: isAuthenticated=\(appState.isAuthenticated), needsOnboarding=\(appState.needsOnboarding), hasCompletedOnboarding=\(appState.hasCompletedOnboarding)")
+        #endif
+
         if !appState.isAuthenticated {
             WelcomeView()
         } else if appState.needsOnboarding {
-            OnboardingIntroView()
+            OnboardingCoordinator()
                 .transition(.opacity)
         } else {
             MainTabView()

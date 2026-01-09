@@ -133,7 +133,9 @@ struct ProfileView: View {
 
                     // Logout button
                     Button(action: {
-                        appState.logout()
+                        Task {
+                            await appState.logout()
+                        }
                     }) {
                         Text("Log out")
                             .font(.system(size: 15))
