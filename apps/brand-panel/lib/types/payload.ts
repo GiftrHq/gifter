@@ -109,6 +109,11 @@ export interface Order {
   }
   buyerNote?: string
   internalNotes?: string
+  tracking?: {
+    carrier?: 'royal_mail' | 'ups' | 'fedex' | 'dhl' | 'dpd' | 'evri' | 'other'
+    trackingNumber?: string
+    trackingUrl?: string
+  }
   createdAt: string
   updatedAt: string
 }

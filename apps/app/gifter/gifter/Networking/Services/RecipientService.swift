@@ -27,12 +27,14 @@ final class RecipientService {
     }
 
     func createRecipient(
+        type: String,
         name: String,
         relationship: String? = nil,
         birthday: Date? = nil,
         notes: String? = nil
     ) async throws -> GiftingProfile {
         let request = CreateRecipientRequest(
+            type: type,
             name: name,
             relationship: relationship,
             birthday: birthday.map { dateFormatter.string(from: $0) },

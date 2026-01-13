@@ -365,12 +365,40 @@ export interface Product {
    * Which occasions is this product suitable for?
    */
   occasionFit?:
-    | ('birthday' | 'anniversary' | 'housewarming' | 'thankyou' | 'justbecause' | 'wedding' | 'babyshower')[]
+    | (
+        | 'birthday'
+        | 'christmas'
+        | 'valentines'
+        | 'mothersDay'
+        | 'fathersDay'
+        | 'anniversary'
+        | 'wedding'
+        | 'housewarming'
+        | 'graduation'
+        | 'thankyou'
+        | 'justbecause'
+        | 'babyshower'
+      )[]
     | null;
   /**
    * These help me understand who this is for. I use them when lining up recommendations.
    */
-  styleTags?: ('minimal' | 'bold' | 'cozy' | 'luxurious' | 'playful' | 'earthy' | 'modern' | 'classic')[] | null;
+  styleTags?:
+    | (
+        | 'minimal'
+        | 'modern'
+        | 'rustic'
+        | 'vintage'
+        | 'luxury'
+        | 'playful'
+        | 'elegant'
+        | 'bohemian'
+        | 'bold'
+        | 'cozy'
+        | 'classic'
+        | 'earthy'
+      )[]
+    | null;
   /**
    * Does this product have variants (e.g., sizes, colors)?
    */
@@ -509,6 +537,14 @@ export interface Order {
     state?: string | null;
     postalCode?: string | null;
     country?: string | null;
+  };
+  /**
+   * Tracking information for this order
+   */
+  tracking?: {
+    carrier?: ('royal_mail' | 'ups' | 'fedex' | 'dhl' | 'dpd' | 'evri' | 'other') | null;
+    trackingNumber?: string | null;
+    trackingUrl?: string | null;
   };
   /**
    * Note from the buyer
@@ -991,6 +1027,13 @@ export interface OrdersSelect<T extends boolean = true> {
         state?: T;
         postalCode?: T;
         country?: T;
+      };
+  tracking?:
+    | T
+    | {
+        carrier?: T;
+        trackingNumber?: T;
+        trackingUrl?: T;
       };
   buyerNote?: T;
   internalNotes?: T;

@@ -21,9 +21,12 @@ final class OccasionService {
 
     // MARK: - Occasions
 
-    func getOccasions() async throws -> [Occasion] {
-        let response: OccasionListResponse = try await client.request(OccasionEndpoint.getOccasions)
-        return response.occasions.map { $0.toDomain() }
+    func getOccasionFeed(days: Int = 30) async throws -> OccasionFeed {
+        let response: OccasionFeedResponse = try await client.request(OccasionEndpoint.getFeed(days: days))
+        return OccasionFeed(
+            nextTwoWeeks: response.nextTwoWeeks.map { $0.toDomain() },
+            later: response.later.map { $0.toDomain() }
+        )
     }
 
     func createOccasion(
@@ -32,6 +35,8 @@ final class OccasionService {
         title: String? = nil,
         date: Date,
         recurrence: OccasionRecurrence = .none,
+        visibility: OccasionVisibility = .publicVisibility,
+        sharedWithUserIds: [String]? = nil,
         notes: String? = nil
     ) async throws -> Occasion {
         let request = CreateOccasionRequest(
@@ -40,6 +45,8 @@ final class OccasionService {
             title: title,
             date: dateFormatter.string(from: date),
             recurrence: recurrence.rawValue,
+            visibility: visibility.rawValue,
+            sharedWithUserIds: sharedWithUserIds,
             notes: notes
         )
 
@@ -52,13 +59,17 @@ final class OccasionService {
         title: String? = nil,
         date: Date? = nil,
         notes: String? = nil,
-        recurrence: OccasionRecurrence? = nil
+        recurrence: OccasionRecurrence? = nil,
+        visibility: OccasionVisibility? = nil,
+        sharedWithUserIds: [String]? = nil
     ) async throws -> Occasion {
         let request = UpdateOccasionRequest(
             title: title,
             date: date.map { dateFormatter.string(from: $0) },
             notes: notes,
-            recurrence: recurrence?.rawValue
+            recurrence: recurrence?.rawValue,
+            visibility: visibility?.rawValue,
+            sharedWithUserIds: sharedWithUserIds
         )
 
         let response: OccasionDTO = try await client.request(OccasionEndpoint.updateOccasion(id: id, request))
@@ -68,6 +79,18 @@ final class OccasionService {
     func deleteOccasion(id: String) async throws {
         try await client.request(OccasionEndpoint.deleteOccasion(id: id))
     }
+}
+
+// MARK: - Helper Models
+
+struct OccasionFeed {
+    let nextTwoWeeks: [Occasion]
+    let later: [Occasion]
+}
+
+struct OccasionFeedResponse: Decodable {
+    let nextTwoWeeks: [OccasionDTO]
+    let later: [OccasionDTO]
 }
 
 // MARK: - Occasion Recurrence

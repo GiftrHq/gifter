@@ -21,12 +21,13 @@ final class UserService {
         return response.toDomain()
     }
 
-    func updateProfile(name: String? = nil, avatar: String? = nil, timezone: String? = nil, currency: String? = nil) async throws -> User {
+    func updateProfile(name: String? = nil, avatar: String? = nil, timezone: String? = nil, currency: String? = nil, phone: String? = nil) async throws -> User {
         let request = UpdateUserRequest(
             name: name,
             avatar: avatar,
             timezone: timezone,
-            defaultCurrency: currency
+            defaultCurrency: currency,
+            phone: phone
         )
 
         let response: MeResponse = try await client.request(UserEndpoint.updateMe(request))

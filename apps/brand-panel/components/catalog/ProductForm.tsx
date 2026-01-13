@@ -7,6 +7,7 @@ import { apiClient } from '@/lib/api/client'
 import { Product, Media, ProductVariant } from '@/lib/types/payload'
 import { ImageUpload } from '@/components/media/ImageUpload'
 import { VariantManager } from './VariantManager'
+import { ChipSelector } from './ChipSelector'
 
 interface ProductFormProps {
   product?: Product // If editing an existing product
@@ -69,6 +70,53 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
 
   const [giftTags, setGiftTags] = useState<string[]>([])
   const [giftTagsInput, setGiftTagsInput] = useState('')
+
+  // Metadata options from CMS
+  const [metaOptions, setMetaOptions] = useState<{
+    occasions: { label: string; value: string }[]
+    styleTags: { label: string; value: string }[]
+  }>({
+    occasions: [
+      { label: 'Birthday', value: 'birthday' },
+      { label: 'Christmas', value: 'christmas' },
+      { label: 'Valentine\'s Day', value: 'valentines' },
+      { label: 'Mother\'s Day', value: 'mothersDay' },
+      { label: 'Father\'s Day', value: 'fathersDay' },
+      { label: 'Anniversary', value: 'anniversary' },
+      { label: 'Wedding', value: 'wedding' },
+      { label: 'Housewarming', value: 'housewarming' },
+      { label: 'Graduation', value: 'graduation' },
+      { label: 'Thank You', value: 'thankyou' },
+      { label: 'Just Because', value: 'justbecause' },
+      { label: 'Baby Shower', value: 'babyshower' },
+    ],
+    styleTags: [
+      { label: 'Minimal', value: 'minimal' },
+      { label: 'Modern', value: 'modern' },
+      { label: 'Rustic', value: 'rustic' },
+      { label: 'Vintage', value: 'vintage' },
+      { label: 'Luxury', value: 'luxury' },
+      { label: 'Playful', value: 'playful' },
+      { label: 'Elegant', value: 'elegant' },
+      { label: 'Bohemian', value: 'bohemian' },
+      { label: 'Bold', value: 'bold' },
+      { label: 'Cozy', value: 'cozy' },
+      { label: 'Classic', value: 'classic' },
+      { label: 'Earthy', value: 'earthy' },
+    ],
+  })
+
+  useEffect(() => {
+    const loadMeta = async () => {
+      try {
+        const meta = await apiClient.getProductMeta()
+        setMetaOptions(meta)
+      } catch (err) {
+        console.error('Failed to load product metadata, using fallbacks', err)
+      }
+    }
+    loadMeta()
+  }, [])
 
   useEffect(() => {
     const tags = product?.giftTags?.map(t => t.tag) ?? []
@@ -464,6 +512,7 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
                 <VariantManager
                   productId={product?.id}
                   defaultCurrency={formData.defaultCurrency}
+                  productSlug={product?.slug || generateSlug(formData.title) || 'product'}
                   initialPendingVariants={pendingVariants}
                   onPendingChange={setPendingVariants}
                 />
@@ -501,78 +550,24 @@ export function ProductForm({ product, mode = 'create' }: ProductFormProps) {
             </div>
 
 
-            <div>
-              <label className="label mb-2 block">Occasions</label>
-              <select
-                multiple
-                value={formData.occasionFit}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions, (option) => option.value)
-                  handleInputChange('occasionFit', selected)
-                }}
-                className="input w-full"
-                size={6}
-              >
-                <option value="birthday">Birthday</option>
-                <option value="christmas">Christmas</option>
-                <option value="valentines">Valentine's Day</option>
-                <option value="mothersDay">Mother's Day</option>
-                <option value="fathersDay">Father's Day</option>
-                <option value="anniversary">Anniversary</option>
-                <option value="wedding">Wedding</option>
-                <option value="housewarming">Housewarming</option>
-                <option value="graduation">Graduation</option>
-                <option value="thankyou">Thank You</option>
-              </select>
-              <p className="mt-1 text-xs text-panelGray">
-                Hold Cmd/Ctrl to select multiple
-              </p>
-            </div>
+            <ChipSelector
+              label="Occasions"
+              options={metaOptions.occasions}
+              selectedValues={formData.occasionFit}
+              onChange={(selected) => handleInputChange('occasionFit', selected)}
+            />
 
-            <div>
-              <label className="label mb-2 block">Style Tags</label>
-              <select
-                multiple
-                value={formData.styleTags}
-                onChange={(e) => {
-                  const selected = Array.from(e.target.selectedOptions, (option) => option.value)
-                  handleInputChange('styleTags', selected)
-                }}
-                className="input w-full"
-                size={6}
-              >
-                <option value="minimal">Minimal</option>
-                <option value="modern">Modern</option>
-                <option value="rustic">Rustic</option>
-                <option value="vintage">Vintage</option>
-                <option value="luxury">Luxury</option>
-                <option value="playful">Playful</option>
-                <option value="elegant">Elegant</option>
-                <option value="bohemian">Bohemian</option>
-              </select>
-            </div>
+            <ChipSelector
+              label="Style Tags"
+              options={metaOptions.styleTags}
+              selectedValues={formData.styleTags}
+              onChange={(selected) => handleInputChange('styleTags', selected)}
+            />
           </div>
 
           {/* Visibility */}
           <div className="card space-y-4">
             <h3 className="h4">Visibility</h3>
-
-            <div>
-              <label className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  checked={formData.isFeatured}
-                  onChange={(e) => handleInputChange('isFeatured', e.target.checked)}
-                  className="mt-0.5 h-4 w-4"
-                />
-                <div className="flex-1">
-                  <span className="text-sm font-medium">Featured Product</span>
-                  <p className="text-xs text-panelGray">
-                    Highlight in featured collections
-                  </p>
-                </div>
-              </label>
-            </div>
 
             <div>
               <label className="flex items-start gap-3">

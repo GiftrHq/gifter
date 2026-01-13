@@ -279,15 +279,15 @@ enum CollectionEndpoint: APIEndpoint {
 
 // MARK: - Occasion Endpoints
 enum OccasionEndpoint: APIEndpoint {
-    case getOccasions
+    case getFeed(days: Int)
     case createOccasion(CreateOccasionRequest)
     case updateOccasion(id: String, UpdateOccasionRequest)
     case deleteOccasion(id: String)
 
     var path: String {
         switch self {
-        case .getOccasions:
-            return "/v1/occasions"
+        case .getFeed:
+            return "/v1/occasions/feed"
         case .createOccasion:
             return "/v1/occasions"
         case .updateOccasion(let id, _), .deleteOccasion(let id):
@@ -297,7 +297,7 @@ enum OccasionEndpoint: APIEndpoint {
 
     var method: HTTPMethod {
         switch self {
-        case .getOccasions:
+        case .getFeed:
             return .get
         case .createOccasion:
             return .post
@@ -400,6 +400,49 @@ enum WishlistEndpoint: APIEndpoint {
             return request
         case .addItem(_, let productId):
             return AddWishlistItemRequest(productId: productId)
+        default:
+            return nil
+        }
+    }
+}
+
+// MARK: - Address Endpoints
+enum AddressEndpoint: APIEndpoint {
+    case getAddresses
+    case createAddress(CreateAddressRequest)
+    case updateAddress(id: String, UpdateAddressRequest)
+    case deleteAddress(id: String)
+    
+    var path: String {
+        switch self {
+        case .getAddresses:
+            return "/v1/addresses"
+        case .createAddress:
+            return "/v1/addresses"
+        case .updateAddress(let id, _), .deleteAddress(let id):
+            return "/v1/addresses/\(id)"
+        }
+    }
+    
+    var method: HTTPMethod {
+        switch self {
+        case .getAddresses:
+            return .get
+        case .createAddress:
+            return .post
+        case .updateAddress:
+            return .patch
+        case .deleteAddress:
+            return .delete
+        }
+    }
+    
+    var body: Encodable? {
+        switch self {
+        case .createAddress(let request):
+            return request
+        case .updateAddress(_, let request):
+            return request
         default:
             return nil
         }

@@ -71,19 +71,27 @@ final class HomeViewModel: ObservableObject {
         #endif
 
         do {
-            // Fetch collections from API
-            let fetchedCollections = try await collectionService.getCollections(limit: 10)
+            // Fetch collections and unified occasion feed
+            async let fetchedCollections = collectionService.getCollections(limit: 10)
+            async let feed = OccasionService.shared.getOccasionFeed(days: 30)
+            
+            let (collections, occasionFeed) = try await (fetchedCollections, feed)
             
             // If we were cancelled mid-flight, don’t update state.
             guard !Task.isCancelled else { return }
 
             #if DEBUG
-            print("HomeViewModel: Loaded \(fetchedCollections.count) collections")
+            print("HomeViewModel: Loaded \(collections.count) collections")
             #endif
 
+            // Use unified feed for the "Coming up soon" section
+            // Feed is already sorted cronologically by the API
+            let allUpcoming = occasionFeed.nextTwoWeeks
+            
             // Animate the update
             withAnimation(.easeOut(duration: 0.3)) {
-                self.collections = fetchedCollections
+                self.collections = collections
+                self.upcomingOccasions = allUpcoming
                 self.hasLoadedInitialData = true
             }
 

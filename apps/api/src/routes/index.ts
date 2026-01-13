@@ -28,7 +28,7 @@ export async function registerRoutes(app: FastifyInstance) {
   await app.register(telemetryRoutes, { prefix: '/v1' });
   await app.register(onboardingRoutes, { prefix: '/v1/onboarding' });
   await app.register(collectionsRoutes, { prefix: '/v1/collections' });
-  await app.register(addressesRoutes, { prefix: '/v1/me' });
+  await app.register(addressesRoutes, { prefix: '/v1' });
 
   // Internal webhook routes
   await app.register(integrationsRoutes, { prefix: '/v1' });

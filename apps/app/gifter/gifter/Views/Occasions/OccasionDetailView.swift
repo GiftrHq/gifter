@@ -156,11 +156,23 @@ struct OccasionDetailView: View {
     }
 
     private func loadRecommendations() {
-        // Simulate loading
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-            withAnimation {
-                recommendations = MockData.products
-                isLoading = false
+        Task {
+            isLoading = true
+            do {
+                let products = try await ProductService.shared.getRecommendationsForOccasion(occasionId: occasion.id)
+                await MainActor.run {
+                    withAnimation {
+                        self.recommendations = products
+                        self.isLoading = false
+                    }
+                }
+            } catch {
+                #if DEBUG
+                print("Failed to load recommendations: \(error)")
+                #endif
+                await MainActor.run {
+                    self.isLoading = false
+                }
             }
         }
     }

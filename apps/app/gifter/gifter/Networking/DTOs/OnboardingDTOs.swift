@@ -16,11 +16,11 @@ struct OnboardingStartRequest: Encodable {
 struct UpdateIdentityRequest: Codable {
     let birthday: String?
     let phone: String?
-    let address: AddressDTO?
+    let address: OnboardingAddressDTO?
     let onboardingStep: Int?
 }
 
-struct AddressDTO: Codable {
+struct OnboardingAddressDTO: Codable {
     let line1: String
     let line2: String?
     let city: String

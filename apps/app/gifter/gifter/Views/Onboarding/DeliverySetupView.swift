@@ -90,7 +90,7 @@ struct DeliverySetupView: View {
         Task {
             do {
                 // Call the new production-ready identity service method
-                let addressDTO = AddressDTO(
+                let addressDTO = OnboardingAddressDTO(
                     line1: line1,
                     line2: line2.isEmpty ? nil : line2,
                     city: city,
