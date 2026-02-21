@@ -59,8 +59,8 @@ export default buildConfig({
 
   plugins: [
     stripePlugin({
-      stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
-      isTestKey: process.env.STRIPE_SECRET_KEY?.includes('test') || true,
+      stripeSecretKey: process.env.STRIPE_SECRET_KEY || 'sk_test_dummy',
+      isTestKey: !process.env.STRIPE_SECRET_KEY || process.env.STRIPE_SECRET_KEY.includes('test'),
       // No sync needed - we only use Stripe Connect for payouts, not product management
     }),
   ],
