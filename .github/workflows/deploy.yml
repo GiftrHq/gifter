@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master # In case main branch is named master
+  workflow_dispatch:
 
 jobs:
   deploy:
