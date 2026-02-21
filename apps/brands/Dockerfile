@@ -29,6 +29,10 @@ COPY . .
 # Learn more here: https://nextjs.org/telemetry
 # Uncomment the following line in case you want to disable telemetry during the build.
 # ENV NEXT_TELEMETRY_DISABLED 1
+ENV STRIPE_SECRET_KEY=sk_test_dummy
+ENV PAYLOAD_SECRET=dummy_secret
+ENV RESEND_API_KEY=re_dummy_key
+ENV NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_dummy
 
 RUN \
   if [ -f yarn.lock ]; then yarn run build; \
