@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # Caddy Reverse Proxy
+  caddy:
+    image: caddy:2-alpine
+    container_name: caddy-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+    networks:
+      - gifter-prod-network
+
+  # Shared PostgreSQL Database
+  postgres:
+    container_name: gifter-postgres-prod
+    image: pgvector/pgvector:pg15
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-gifter_core}
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - gifter-prod-network
+
+  # Redis (BullMQ queues, caching)
+  redis:
+    container_name: gifter-redis-prod
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - gifter-prod-network
+
+  # Core API (apps/api)
+  api:
+    container_name: gifter-api-prod
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile.prod
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - gifter-prod-network
+
+  # Brands/Payload CMS (apps/brands)
+  brands:
+    container_name: gifter-brands-prod
+    build:
+      context: apps/brands
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    env_file:
+      - .env
+    networks:
+      - gifter-prod-network
+
+  # Brand Panel (apps/brand-panel)
+  brand-panel:
+    container_name: gifter-brand-panel-prod
+    build:
+      context: .
+      dockerfile: apps/brand-panel/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - gifter-prod-network
+
+  # Web (apps/web)
+  web:
+    container_name: gifter-web-prod
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    restart: unless-stopped
+    env_file:
+      - .env
+    networks:
+      - gifter-prod-network
+
+volumes:
+  postgres_data_prod:
+  redis_data_prod:
+  caddy_data:
+  caddy_config:
+
+networks:
+  gifter-prod-network:
+    driver: bridge

@@ -1,0 +1,15 @@
+api.atgifter.com {
+    reverse_proxy api:4000
+}
+
+brands.atgifter.com {
+    reverse_proxy brands:3000
+}
+
+panel.atgifter.com {
+    reverse_proxy brand-panel:3002
+}
+
+www.atgifter.com atgifter.com {
+    reverse_proxy web:3000
+}

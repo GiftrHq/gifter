@@ -1,0 +1,42 @@
+name: Deploy to Production Server
+
+on:
+  push:
+    branches:
+      - main
+      - master # In case main branch is named master
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd /opt/gifter || exit
+            # Pull latest changes
+            git fetch --all
+            git reset --hard origin/main
+            
+            # Install Doppler CLI if not present
+            if ! command -v doppler &> /dev/null; then
+              curl -Ls https://cli.doppler.com/install.sh | sudo sh
+            fi
+            
+            # Fetch secrets from Doppler and write to .env
+            doppler secrets download --no-file --format docker -t ${{ secrets.DOPPLER_TOKEN }} > .env
+            
+            # Restart docker containers and rebuild as necessary
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml up -d --build
+            
+            # Clean up old docker images to save space
+            docker image prune -a -f
