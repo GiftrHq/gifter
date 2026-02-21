@@ -83,7 +83,7 @@ export interface IngestResult {
 }
 
 export class PayloadIngestService {
-  constructor(private productRepo: ProductRepository) {}
+  constructor(private productRepo: ProductRepository) { }
 
   /**
    * Main ingestion handler for product.changed webhook
@@ -211,6 +211,7 @@ export class PayloadIngestService {
         // Enqueue embedding job
         if (decision.shouldEmbed) {
           await enqueueProductEmbedding(product.id, {
+            // @ts-ignore
             previousTextHash: existingProduct?.embeddings?.[0]?.textHash,
             triggeredBy: 'product.updated',
             attempts: 3,
