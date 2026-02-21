@@ -24,11 +24,13 @@ RUN npm ci
 
 # Build the project
 COPY --from=builder /app/out/full/ .
-RUN npx turbo run build --filter=api...
 
-# Generate Prisma Client specifically for api
+# Generate Prisma Client specifically for api BEFORE building
 WORKDIR /app/apps/api
 RUN npx prisma generate
+
+WORKDIR /app
+RUN npx turbo run build --filter=api...
 
 FROM base AS runner
 WORKDIR /app
