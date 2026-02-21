@@ -65,6 +65,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      - PORT=4000
     networks:
       - gifter-prod-network
 
@@ -80,6 +82,8 @@ services:
         condition: service_healthy
     env_file:
       - .env
+    environment:
+      - PORT=3000
     networks:
       - gifter-prod-network
 
@@ -92,6 +96,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - PORT=3002
     networks:
       - gifter-prod-network
 
@@ -104,6 +110,8 @@ services:
     restart: unless-stopped
     env_file:
       - .env
+    environment:
+      - PORT=3000
     networks:
       - gifter-prod-network
 
