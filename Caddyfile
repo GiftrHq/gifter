@@ -2,7 +2,7 @@ api.atgifter.com {
     reverse_proxy api:4000
 }
 
-brands.atgifter.com {
+cms.atgifter.com {
     reverse_proxy brands:3000
 }
 

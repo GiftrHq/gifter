@@ -11,7 +11,7 @@ Add the following `A Records` pointing to your server IP (`65.21.62.149`):
 | A    | @     | 65.21.62.149   | Automatic |
 | A    | www   | 65.21.62.149   | Automatic |
 | A    | api   | 65.21.62.149   | Automatic |
-| A    | brands| 65.21.62.149   | Automatic |
+| A    | cms   | 65.21.62.149   | Automatic |
 | A    | panel | 65.21.62.149   | Automatic |
 
 ## 2. Server Initial Setup
