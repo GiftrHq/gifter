@@ -6,7 +6,7 @@ WORKDIR /app
 
 RUN npm install -g turbo@^2.3.3
 COPY . .
-RUN turbo prune @gifter/brand-panel --docker
+RUN turbo prune @giftr/web --docker
 
 FROM base AS installer
 RUN apk add --no-cache libc6-compat
@@ -17,23 +17,22 @@ COPY --from=builder /app/out/package-lock.json ./package-lock.json
 RUN npm ci
 
 COPY --from=builder /app/out/full/ .
-RUN npx turbo run build --filter=@gifter/brand-panel...
+RUN npx turbo run build --filter=@giftr/web...
 
 FROM base AS runner
 WORKDIR /app
 ENV NODE_ENV production
-ENV PORT 3002
+ENV PORT 3000
 
 RUN addgroup --system --gid 1001 nodejs
 RUN adduser --system --uid 1001 nextjs
 
-COPY --from=installer --chown=nextjs:nodejs /app/apps/brand-panel/.next/standalone ./
-COPY --from=installer --chown=nextjs:nodejs /app/apps/brand-panel/.next/static ./apps/brand-panel/.next/static
-# Uncomment if public folder exists
-# COPY --from=installer --chown=nextjs:nodejs /app/apps/brand-panel/public ./apps/brand-panel/public
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/standalone ./
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/.next/static ./apps/web/.next/static
+COPY --from=installer --chown=nextjs:nodejs /app/apps/web/public ./apps/web/public
 
 USER nextjs
 
-EXPOSE 3002
+EXPOSE 3000
 
-CMD ["node", "apps/brand-panel/server.js"]
+CMD ["node", "apps/web/server.js"]

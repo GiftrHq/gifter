@@ -19,6 +19,27 @@ struct User: Identifiable, Codable {
     var fullName: String {
         "\(firstName) \(lastName)"
     }
+
+    init(from dto: UserDTO) {
+        let nameParts = (dto.name ?? "").split(separator: " ")
+        self.id = dto.id
+        self.firstName = nameParts.first.map(String.init) ?? ""
+        self.lastName = nameParts.dropFirst().joined(separator: " ")
+        self.email = dto.email
+        self.tasteProfile = nil // UserDTO doesn't have taste profile directly
+        self.occasions = []
+        self.createdAt = dto.createdAt
+    }
+
+    init(id: String, firstName: String, lastName: String, email: String, tasteProfile: TasteProfile?, occasions: [Occasion], createdAt: Date) {
+        self.id = id
+        self.firstName = firstName
+        self.lastName = lastName
+        self.email = email
+        self.tasteProfile = tasteProfile
+        self.occasions = occasions
+        self.createdAt = createdAt
+    }
 }
 
 struct TasteProfile: Codable {

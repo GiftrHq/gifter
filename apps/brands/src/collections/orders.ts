@@ -259,6 +259,41 @@ export const Orders: CollectionConfig = {
               ],
             },
             {
+              name: 'tracking',
+              type: 'group',
+              admin: {
+                description: 'Tracking information for this order',
+              },
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'carrier',
+                      type: 'select',
+                      options: [
+                        { label: 'Royal Mail', value: 'royal_mail' },
+                        { label: 'UPS', value: 'ups' },
+                        { label: 'FedEx', value: 'fedex' },
+                        { label: 'DHL', value: 'dhl' },
+                        { label: 'DPD', value: 'dpd' },
+                        { label: 'Evri', value: 'evri' },
+                        { label: 'Other', value: 'other' },
+                      ],
+                    },
+                    {
+                      name: 'trackingNumber',
+                      type: 'text',
+                    },
+                  ],
+                },
+                {
+                  name: 'trackingUrl',
+                  type: 'text',
+                },
+              ],
+            },
+            {
               name: 'buyerNote',
               type: 'textarea',
               admin: {

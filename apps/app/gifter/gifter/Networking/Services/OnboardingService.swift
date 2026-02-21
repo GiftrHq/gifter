@@ -56,7 +56,7 @@ final class OnboardingService {
         return profileDTO.toDomain()
     }
 
-    func updateIdentity(birthday: Date? = nil, phone: String? = nil, address: AddressDTO? = nil, step: Int? = nil) async throws {
+    func updateIdentity(birthday: Date? = nil, phone: String? = nil, address: OnboardingAddressDTO? = nil, step: Int? = nil) async throws {
         var birthdayString: String? = nil
         if let birthday = birthday {
             birthdayString = ISO8601DateFormatter().string(from: birthday)

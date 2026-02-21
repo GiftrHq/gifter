@@ -40,9 +40,17 @@ struct OccasionChip: View {
                 )
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("\(occasion.personName) · \(occasion.relationship)")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(GifterColors.gifterWhite)
+                HStack(spacing: 4) {
+                    Text(occasion.personName)
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(GifterColors.gifterWhite)
+                    
+                    if !occasion.relationship.isEmpty {
+                        Text("· \(occasion.relationship)")
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(GifterColors.gifterWhite)
+                    }
+                }
 
                 Text(occasion.countdownText)
                     .font(.system(size: 12))

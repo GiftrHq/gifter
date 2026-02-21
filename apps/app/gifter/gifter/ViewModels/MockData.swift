@@ -80,26 +80,26 @@ struct MockData {
         )
     ]
 
-    static let occasions: [Occasion] = [
-        Occasion(
-            id: "1",
-            personName: "Mia",
-            relationship: "Sister",
-            occasionType: "Birthday",
-            date: Calendar.current.date(byAdding: .day, value: 6, to: Date())!,
-            savedProducts: [],
-            status: .planning
-        ),
-        Occasion(
-            id: "2",
-            personName: "James",
-            relationship: "Partner",
-            occasionType: "Anniversary",
-            date: Calendar.current.date(byAdding: .day, value: 24, to: Date())!,
-            savedProducts: [],
-            status: .planning
-        )
-    ]
+//    static let occasions: [Occasion] = [
+//        Occasion(
+//            id: "1",
+//            personName: "Mia",
+//            relationship: "Sister",
+//            occasionType: "Birthday",
+//            date: Calendar.current.date(byAdding: .day, value: 6, to: Date())!,
+//            savedProducts: [],
+//            status: .planning
+//        ),
+//        Occasion(
+//            id: "2",
+//            personName: "James",
+//            relationship: "Partner",
+//            occasionType: "Anniversary",
+//            date: Calendar.current.date(byAdding: .day, value: 24, to: Date())!,
+//            savedProducts: [],
+//            status: .planning
+//        )
+//    ]
 
     static let giftingProfiles: [GiftingProfile] = [
         GiftingProfile(

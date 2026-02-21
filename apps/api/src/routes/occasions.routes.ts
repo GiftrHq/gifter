@@ -6,6 +6,7 @@ import {
   getUpcomingOccasions,
   updateOccasion,
   deleteOccasion,
+  getOccasionFeed,
 } from '../controllers/occasions.controller';
 
 export async function occasionsRoutes(app: FastifyInstance) {
@@ -13,6 +14,7 @@ export async function occasionsRoutes(app: FastifyInstance) {
 
   app.post('/occasions', createOccasion);
   app.get('/occasions', getOccasions);
+  app.get('/occasions/feed', getOccasionFeed);
   app.get('/occasions/upcoming', getUpcomingOccasions);
   app.patch('/occasions/:id', updateOccasion);
   app.delete('/occasions/:id', deleteOccasion);

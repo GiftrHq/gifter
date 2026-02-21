@@ -3,6 +3,36 @@ import { isAdmin } from '../access/isAdmin.js'
 import { filterByBrandField } from '../access/brandAccess.js'
 import { notifyCoreApiOnProductChange } from '../hooks/products.js'
 
+export const OCCASION_OPTIONS = [
+  { label: 'Birthday', value: 'birthday' },
+  { label: 'Christmas', value: 'christmas' },
+  { label: 'Valentine\'s Day', value: 'valentines' },
+  { label: 'Mother\'s Day', value: 'mothersDay' },
+  { label: 'Father\'s Day', value: 'fathersDay' },
+  { label: 'Anniversary', value: 'anniversary' },
+  { label: 'Wedding', value: 'wedding' },
+  { label: 'Housewarming', value: 'housewarming' },
+  { label: 'Graduation', value: 'graduation' },
+  { label: 'Thank You', value: 'thankyou' },
+  { label: 'Just Because', value: 'justbecause' },
+  { label: 'Baby Shower', value: 'babyshower' },
+]
+
+export const STYLE_OPTIONS = [
+  { label: 'Minimal', value: 'minimal' },
+  { label: 'Modern', value: 'modern' },
+  { label: 'Rustic', value: 'rustic' },
+  { label: 'Vintage', value: 'vintage' },
+  { label: 'Luxury', value: 'luxury' },
+  { label: 'Playful', value: 'playful' },
+  { label: 'Elegant', value: 'elegant' },
+  { label: 'Bohemian', value: 'bohemian' },
+  { label: 'Bold', value: 'bold' },
+  { label: 'Cozy', value: 'cozy' },
+  { label: 'Classic', value: 'classic' },
+  { label: 'Earthy', value: 'earthy' },
+]
+
 export const Products: CollectionConfig = {
   slug: 'products',
   hooks: {
@@ -199,15 +229,7 @@ export const Products: CollectionConfig = {
               hasMany: true,
               required: false,
               defaultValue: [],
-              options: [
-                { label: 'Birthday', value: 'birthday' },
-                { label: 'Anniversary', value: 'anniversary' },
-                { label: 'Housewarming', value: 'housewarming' },
-                { label: 'Thank You', value: 'thankyou' },
-                { label: 'Just Because', value: 'justbecause' },
-                { label: 'Wedding', value: 'wedding' },
-                { label: 'Baby Shower', value: 'babyshower' },
-              ],
+              options: OCCASION_OPTIONS,
               admin: {
                 description: 'Which occasions is this product suitable for?',
               },
@@ -218,16 +240,7 @@ export const Products: CollectionConfig = {
               hasMany: true,
               required: false,
               defaultValue: [],
-              options: [
-                { label: 'Minimal', value: 'minimal' },
-                { label: 'Bold', value: 'bold' },
-                { label: 'Cozy', value: 'cozy' },
-                { label: 'Luxurious', value: 'luxurious' },
-                { label: 'Playful', value: 'playful' },
-                { label: 'Earthy', value: 'earthy' },
-                { label: 'Modern', value: 'modern' },
-                { label: 'Classic', value: 'classic' },
-              ],
+              options: STYLE_OPTIONS,
               admin: {
                 description: 'These help me understand who this is for. I use them when lining up recommendations.',
               },
@@ -315,6 +328,18 @@ export const Products: CollectionConfig = {
           ],
         },
       ],
+    },
+  ],
+  endpoints: [
+    {
+      path: '/meta/fields',
+      method: 'get',
+      handler: async (req) => {
+        return Response.json({
+          occasions: OCCASION_OPTIONS,
+          styleTags: STYLE_OPTIONS,
+        })
+      },
     },
   ],
 }

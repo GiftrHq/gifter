@@ -35,31 +35,38 @@ struct ProfileView: View {
                     VStack(alignment: .leading, spacing: 16) {
                         sectionHeader("You")
 
-                        GifterCard {
-                            HStack(spacing: 16) {
-                                Circle()
-                                    .fill(GifterColors.gifterSoftGray)
-                                    .frame(width: 60, height: 60)
-                                    .overlay(
-                                        Text(String(appState.currentUser?.firstName.prefix(1) ?? "?"))
-                                            .font(.system(size: 24, weight: .medium))
+                        NavigationLink(destination: EditProfileView()) {
+                            GifterCard {
+                                HStack(spacing: 16) {
+                                    Circle()
+                                        .fill(GifterColors.gifterSoftGray)
+                                        .frame(width: 60, height: 60)
+                                        .overlay(
+                                            Text(String(appState.currentUser?.firstName.prefix(1) ?? "?"))
+                                                .font(.system(size: 24, weight: .medium))
+                                                .foregroundColor(GifterColors.gifterWhite)
+                                        )
+
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text(appState.currentUser?.fullName ?? "Guest")
+                                            .font(.system(size: 18, weight: .medium))
                                             .foregroundColor(GifterColors.gifterWhite)
-                                    )
 
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(appState.currentUser?.fullName ?? "Guest")
-                                        .font(.system(size: 18, weight: .medium))
-                                        .foregroundColor(GifterColors.gifterWhite)
+                                        Text(appState.currentUser?.email ?? "")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(GifterColors.gifterGray)
+                                    }
 
-                                    Text(appState.currentUser?.email ?? "")
-                                        .font(.system(size: 14))
+                                    Spacer()
+                                    
+                                    Image(systemName: "pencil")
+                                        .font(.system(size: 16))
                                         .foregroundColor(GifterColors.gifterGray)
                                 }
-
-                                Spacer()
+                                .padding(20)
                             }
-                            .padding(20)
                         }
+                        .buttonStyle(PlainButtonStyle())
                         .padding(.horizontal, 24)
                     }
 
@@ -89,6 +96,76 @@ struct ProfileView: View {
                             }
                             .padding(.horizontal, 24)
                         }
+                    }
+
+                    // My Occasions section
+                    VStack(alignment: .leading, spacing: 16) {
+                        sectionHeader("My Occasions")
+                        
+                        NavigationLink(destination: OccasionsListView()) {
+                            GifterCard {
+                                HStack {
+                                    Image(systemName: "calendar")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(GifterColors.gifterWhite)
+                                        .frame(width: 40)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Manage Occasions")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(GifterColors.gifterWhite)
+                                        
+                                        Text("Keep track of important dates")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(GifterColors.gifterGray)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(GifterColors.gifterGray)
+                                }
+                                .padding(20)
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal, 24)
+                    }
+
+                    // My Addresses section
+                    VStack(alignment: .leading, spacing: 16) {
+                        sectionHeader("My Addresses")
+                        
+                        NavigationLink(destination: AddressListView()) {
+                            GifterCard {
+                                HStack {
+                                    Image(systemName: "mappin.and.ellipse")
+                                        .font(.system(size: 20))
+                                        .foregroundColor(GifterColors.gifterWhite)
+                                        .frame(width: 40)
+                                    
+                                    VStack(alignment: .leading, spacing: 4) {
+                                        Text("Manage Addresses")
+                                            .font(.system(size: 16, weight: .medium))
+                                            .foregroundColor(GifterColors.gifterWhite)
+                                        
+                                        Text("Shipping and billing addresses")
+                                            .font(.system(size: 14))
+                                            .foregroundColor(GifterColors.gifterGray)
+                                    }
+                                    
+                                    Spacer()
+                                    
+                                    Image(systemName: "chevron.right")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(GifterColors.gifterGray)
+                                }
+                                .padding(20)
+                            }
+                        }
+                        .buttonStyle(PlainButtonStyle())
+                        .padding(.horizontal, 24)
                     }
 
                     // Notifications section

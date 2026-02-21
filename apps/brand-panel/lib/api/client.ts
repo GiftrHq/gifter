@@ -146,14 +146,11 @@ class PayloadAPIClient {
   }
 
   // File upload
-  async upload(file: File, alt?: string): Promise<any> {
-    const token = await this.getToken()
+  async upload(file: File): Promise<any> {
     const formData = new FormData()
     formData.append('file', file)
-    if (alt) {
-      formData.append('alt', alt)
-    }
 
+    const token = await this.getToken()
     const headers: Record<string, string> = {}
     if (token) {
       headers['Authorization'] = `JWT ${token}`
@@ -167,11 +164,14 @@ class PayloadAPIClient {
     })
 
     if (!response.ok) {
-      throw new Error('Upload failed')
+      throw new Error('Failed to upload image')
     }
 
-    const result = await response.json()
-    return result.doc
+    return response.json()
+  }
+
+  async getProductMeta(): Promise<{ occasions: any[]; styleTags: any[] }> {
+    return this.request<{ occasions: any[]; styleTags: any[] }>('/api/products/meta/fields')
   }
 
   // Custom endpoint for Stripe onboarding

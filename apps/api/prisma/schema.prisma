@@ -47,6 +47,11 @@ enum OccasionRecurrence {
   YEARLY
 }
 
+enum OccasionVisibility {
+  PUBLIC
+  PRIVATE
+}
+
 enum NotificationChannel {
   PUSH
   EMAIL
@@ -177,6 +182,8 @@ model User {
   productInteractions ProductInteraction[]
   preferenceState UserPreferenceState?
 
+  sharedOccasions Occasion[] @relation("OccasionSharing")
+
   @@index([createdAt])
 }
 
@@ -279,8 +286,8 @@ model Occasion {
   ownerUserId  String
   owner        User               @relation("OwnerOccasions", fields: [ownerUserId], references: [id], onDelete: Cascade)
 
-  recipientId  String
-  recipient    Recipient          @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  recipientId  String?
+  recipient    Recipient?         @relation(fields: [recipientId], references: [id], onDelete: Cascade)
 
   type         OccasionType
   title        String?
@@ -288,6 +295,9 @@ model Occasion {
   timezone     String             @default("Europe/London")
   isAllDay     Boolean            @default(true)
   recurrence   OccasionRecurrence @default(NONE)
+
+  visibility   OccasionVisibility @default(PUBLIC)
+  sharedWith   User[]             @relation("OccasionSharing")
 
   reminderPolicyId String?
   reminderPolicy   ReminderPolicy? @relation(fields: [reminderPolicyId], references: [id], onDelete: SetNull)

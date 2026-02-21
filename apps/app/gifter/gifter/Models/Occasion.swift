@@ -15,6 +15,9 @@ struct Occasion: Identifiable, Codable {
     var date: Date
     var savedProducts: [Product]
     var status: OccasionStatus
+    var visibility: OccasionVisibility
+    var sharedWith: [User]?
+    var owner: User?
 
     var daysUntil: Int {
         Calendar.current.dateComponents([.day], from: Date(), to: date).day ?? 0

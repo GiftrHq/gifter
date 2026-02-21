@@ -3,9 +3,11 @@ import { ProductVariant } from '@/lib/types/payload'
 import { apiClient } from '@/lib/api/client'
 import { VariantList } from './VariantList'
 import { VariantForm } from './VariantForm'
+import { BulkVariantGenerator } from './BulkVariantGenerator'
 
 interface VariantManagerProps {
     productId?: string
+    productSlug: string
     defaultCurrency: 'GBP' | 'USD' | 'EUR'
     // When creating a product, we manage variants in memory first
     initialPendingVariants?: ProductVariant[]
@@ -14,6 +16,7 @@ interface VariantManagerProps {
 
 export function VariantManager({
     productId,
+    productSlug,
     defaultCurrency,
     initialPendingVariants = [],
     onPendingChange
@@ -21,6 +24,7 @@ export function VariantManager({
     const [variants, setVariants] = useState<ProductVariant[]>(initialPendingVariants)
     const [isLoading, setIsLoading] = useState(false)
     const [isFormOpen, setIsFormOpen] = useState(false)
+    const [isBulkOpen, setIsBulkOpen] = useState(false)
     const [editingVariant, setEditingVariant] = useState<ProductVariant | undefined>(undefined)
 
     // Load existing variants if we have a productId
@@ -112,6 +116,58 @@ export function VariantManager({
         }
     }
 
+    const handleBulkGenerate = async (generated: ProductVariant[]) => {
+        if (variants.length > 0) {
+            if (!confirm(`This will add ${generated.length} more variants to your existing ${variants.length}. Continue?`)) {
+                return
+            }
+        }
+
+        if (!productId) {
+            // Create mode
+            setVariants(prev => [...prev, ...generated])
+            setIsBulkOpen(false)
+            return
+        }
+
+        // Live mode
+        setIsLoading(true)
+        try {
+            const results = await Promise.all(
+                generated.map(v => apiClient.create<ProductVariant>('productVariants', {
+                    ...v,
+                    product: productId,
+                    id: undefined // Remove temp ID
+                }))
+            )
+            setVariants(prev => [...prev, ...results])
+            setIsBulkOpen(false)
+        } catch (err) {
+            alert('Failed to generate some variants')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const handleClearAll = async () => {
+        if (!confirm('Are you sure you want to delete ALL variants? This cannot be undone.')) return
+
+        if (!productId) {
+            setVariants([])
+            return
+        }
+
+        setIsLoading(true)
+        try {
+            await Promise.all(variants.map(v => apiClient.delete('productVariants', v.id)))
+            setVariants([])
+        } catch (err) {
+            alert('Failed to clear some variants')
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     const currencySymbol = defaultCurrency === 'GBP' ? '£' : defaultCurrency === 'USD' ? '$' : '€'
 
     return (
@@ -120,16 +176,46 @@ export function VariantManager({
                 <h3 className="text-sm font-medium text-panelGray">
                     Variants ({variants.length})
                 </h3>
-                {!isFormOpen && (
-                    <button
-                        type="button"
-                        onClick={() => setIsFormOpen(true)}
-                        className="text-sm text-panelWhite hover:underline"
-                    >
-                        + Add Variant
-                    </button>
-                )}
+                <div className="flex gap-4">
+                    {variants.length > 0 && (
+                        <button
+                            type="button"
+                            onClick={handleClearAll}
+                            className="text-sm text-red-500 hover:text-red-400"
+                        >
+                            Clear All
+                        </button>
+                    )}
+                    {!isFormOpen && !isBulkOpen && (
+                        <>
+                            <button
+                                type="button"
+                                onClick={() => setIsBulkOpen(true)}
+                                className="text-sm text-panelGray hover:text-panelWhite"
+                            >
+                                Bulk Generate
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsFormOpen(true)}
+                                className="text-sm text-panelWhite hover:underline"
+                            >
+                                + Add Variant
+                            </button>
+                        </>
+                    )}
+                </div>
             </div>
+
+            {isBulkOpen && (
+                <BulkVariantGenerator
+                    onGenerate={handleBulkGenerate}
+                    onCancel={() => setIsBulkOpen(false)}
+                    defaultPrice={0} // Parent should probably pass default price
+                    defaultCurrency={defaultCurrency}
+                    productSlug={productSlug}
+                />
+            )}
 
             {isFormOpen ? (
                 <VariantForm
